@@ -1,0 +1,17 @@
+$(document).ready(function(){
+    $("#regular").click(function(){
+        $("#regular_modal").modal();
+    });
+    $("#starting").click(function(){
+        $("#starting_modal").modal();
+    });
+    $("#ending").click(function(){
+        $("#ending_modal").modal();
+    });
+    $("#distance").click(function(){
+        $("#distance_modal").modal();
+    });
+    $("#trip_pass").click(function(){
+        $("#trip_pass_modal").modal();
+    });
+});

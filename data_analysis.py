@@ -14,26 +14,6 @@ import matplotlib.pyplot as plt
 def distance(coordinate1, coordinate2):
     return geopy.distance.vincenty(coordinate1, coordinate2).miles
 
-def dict_to_csv(dic, filename):
-    with open(filename,'w') as f:
-        w = csv.writer(f)
-        w.writerows(dic.items())
-
-def readCSVSkipOneLine2(filename):
-    result=[]
-    first=True
-    with open(filename) as csvDataFile:
-        csvReader = csv.reader(csvDataFile)
-        if (csvReader == None):
-            print("FAILED")
-            return
-        for row in csvReader:
-            if first:
-                first=False
-                continue
-            result.append(row)
-    return result
-
 #Most popular starting station
 def popular_starting(filename):
     row_index = 4
@@ -45,6 +25,7 @@ def popular_starting(filename):
                 mydict[row[row_index]] += 1
             else:
                 mydict[row[row_index]] = 1
+    #Sort the dictionary to a list
     sorted_dict = sorted(mydict, key=mydict.get, reverse=True)
     station_ids = []
     number_of_trips = []
@@ -53,7 +34,7 @@ def popular_starting(filename):
         station_id =sorted_dict[i]
         station_ids.append(station_id)
         number_of_trips.append(mydict[station_id])
-
+    #Plot
     plt.bar(y_pos, number_of_trips, align='center', alpha=0.35)
     plt.xticks(y_pos, tuple(station_ids))
     plt.ylabel('Number of Trips')
@@ -73,7 +54,7 @@ def popular_ending(filename):
                 mydict[row[row_index]] += 1
             else:
                 mydict[row[row_index]] = 1
-
+    #Sort the dictionary to a list            
     sorted_dict = sorted(mydict, key=mydict.get, reverse=True)
     station_ids = []
     number_of_trips = []
@@ -82,7 +63,7 @@ def popular_ending(filename):
         station_id =sorted_dict[i]
         station_ids.append(station_id)
         number_of_trips.append(mydict[station_id])
-
+    #Plot
     plt.bar(y_pos, number_of_trips, align='center', alpha=0.35)
     plt.xticks(y_pos, tuple(station_ids))
     plt.xlabel('Station ID')
@@ -147,8 +128,8 @@ def average_distance(filename):
                 trip_distance = distance(start_station,end_station)
                 distance_frequency(distance_dictionary, trip_distance)
                 result+=trip_distance
+    #Sort the dictionary to a list
     sorted_dict = sorted(distance_dictionary.items(), key=operator.itemgetter(0))
-
     average = result/number_of_entries
     average_distance = []
     frequency = []
@@ -156,8 +137,6 @@ def average_distance(filename):
         xdistance = sorted_dict[i][0]
         average_distance.append(xdistance)
         frequency.append(sorted_dict[i][1])
-    print(average_distance)
-    print(frequency)
     # Create data
     N = len(distance_dictionary)
     x = average_distance
@@ -165,10 +144,7 @@ def average_distance(filename):
     y_pos = np.arange(N)
     colors = (0,0,0)
     area = np.pi*3
-     
     # Plot
-    
-    plt.scatter(x, y, s=area, c=colors, alpha=0.5)
     plt.plot(x, y, linestyle='-')
     plt.title('Distance Distribution')
     plt.xlabel('Distance(miles)')
@@ -189,13 +165,76 @@ def number_of_regulars(filename):
     # Pie chart, where the slices will be ordered and plotted counter-clockwise:
     labels = 'Regular', 'Non-Regular'
     sizes = [number, total-number]
-    
-    
+    #Plot
     fig1, ax1 = plt.subplots()
     ax1.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
     ax1.set_title("Regular vs. Non-Regular Riders")
     ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
     plt.savefig("static/graphs/regular_rider.png", bbox_inches="tight", format="png",)
     return number
+
+#Labels the double bar graph
+def autolabel(rects, ax, xpos='center'):
+    xpos = xpos.lower()  # normalize the case of the parameter
+    ha = {'center': 'center', 'right': 'left', 'left': 'right'}
+    offset = {'center': 0.5, 'right': 0.57, 'left': 0.43}  # x_txt = x + w*off
+
+    for rect in rects:
+        height = rect.get_height()
+        ax.text(rect.get_x() + rect.get_width()*offset[xpos], 1.01*height,
+                '{}'.format(height), ha=ha[xpos], va='bottom')
+
+#Trip Route Category-Passholder type 
+def trip_route_pass_type(filename):
+    pass_index = 13
+    trip_index = 12
+    one_way = [0,0,0,0]
+    round_trip = [0,0,0,0]
+    with open(filename, mode='r') as infile:
+        reader = csv.reader(infile)
+        for row in reader:
+            pass_type = row[pass_index]
+            trip_type = row[trip_index]
+            if row[pass_index]=="Flex Pass" and row[trip_index] == "One Way":
+                one_way[0] += 1
+            elif row[pass_index]=="Flex Pass" and row[trip_index] == "Round Trip":
+                round_trip[0] += 1
+            elif row[pass_index]=="Monthly Pass" and row[trip_index] == "One Way":
+                one_way[1] += 1
+            elif row[pass_index]=="Monthly Pass" and row[trip_index] == "Round Trip":
+                round_trip[1] += 1
+            elif row[pass_index]=="Staff Annual" and row[trip_index] == "One Way":
+                one_way[2] += 1
+            elif row[pass_index]=="Staff Annual" and row[trip_index] == "Round Trip":
+                round_trip[2] += 1
+            elif row[pass_index]=="Walk-up" and row[trip_index] == "One Way":
+                one_way[3] += 1
+            elif row[pass_index]=="Walk-up" and row[trip_index] == "Round Trip":
+                round_trip[3] += 1
+    one_way_data = tuple(one_way)
+    round_trip_data = tuple(round_trip)
+    
+    #Create data
+    width = 0.35
+    ind = np.arange(4) 
+    #Plot
+    fig, ax = plt.subplots()
+    rects1 = ax.bar(ind - width/2, one_way_data, width, 
+                    color='SkyBlue', label='One Way')
+    rects2 = ax.bar(ind + width/2, round_trip_data, width,
+                    color='IndianRed', label='Round Trip')
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel('Number of Trips')
+    ax.set_title('Trip Route Category-Passholder type')
+    ax.set_xticks(ind)
+    ax.set_xticklabels(('Flex Pass', 'Montly Pass', 'Staff Annual', 'Walk-up'))
+    ax.set_xlabel('Pass Type')
+    ax.legend()
+
+    autolabel(rects1, ax, "left")
+    autolabel(rects2, ax, "right")
+
+    plt.savefig("static/graphs/trip_pass.png", bbox_inches="tight", format="png",)
 
 
