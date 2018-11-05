@@ -1,11 +1,6 @@
-import csv
 import operator
 import geopy.distance
 import math
-
-import plotly.plotly as py
-import plotly.graph_objs as go
-
 import numpy as np
 import matplotlib.pyplot as plt
 
