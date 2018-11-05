@@ -1,6 +1,5 @@
 import csv
 import operator
-import pygeodesy
 import geopy.distance
 import math
 
